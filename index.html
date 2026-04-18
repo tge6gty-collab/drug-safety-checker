@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="title">Drug Safety Checker</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --light-gray: #f8f9fa;
+            --dark-gray: #343a40;
+            --red: #dc3545;
+            --yellow: #ffc107;
+            --green: #28a745;
+            --white: #ffffff;
+            --text-color: #212529;
+            --border-color: #dee2e6;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--light-gray);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: var(--dark-gray);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-hint {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="number"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--white);
+        }
+        .btn-primary:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        #profile-content {
+            margin-top: 15px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+            transition: all 0.3s ease-in-out;
+        }
+        .hidden {
+            display: none;
+        }
+        .visually-hidden {
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            margin: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            border: none;
+        }
+        #result-card {
+            padding: 20px;
+            border-radius: 8px;
+            color: var(--white);
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .result-red { background-color: var(--red); }
+        .result-yellow { background-color: var(--yellow); }
+        .result-green { background-color: var(--green); }
+
+        .interpretation-block {
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .interpretation-header {
+            background-color: var(--light-gray);
+            padding: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .interpretation-content {
+            padding: 15px;
+        }
+        .interpretation-content .summary {
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+        .interpretation-content .original-text {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        #loading, #error {
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+        }
+        .disclaimer {
+            font-size: 12px;
+            color: #6c757d;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .lang-switcher {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="lang-switcher">
+        <button id="lang-toggle" class="btn">EN / 中文</button>
+    </div>
+
+    <div class="container">
+        <h1 data-i18n="title">Drug Safety Checker</h1>
+
+        <!-- User Profile Section -->
+        <div class="section">
+            <div class="profile-header" id="profile-toggle">
+                <h2 data-i18n="profileTitle">User Profile</h2>
+                <span id="profile-indicator">▼</span>
+            </div>
+            <div id="profile-content">
+                <div class="form-group">
+                    <label for="age" data-i18n="ageLabel">Age</label>
+                    <input type="number" id="age" placeholder-i18n="agePlaceholder">
+                </div>
+                <div class="form-group">
+                    <label for="gender" data-i18n="genderLabel">Gender</label>
+                    <input type="text" id="gender" placeholder-i18n="genderPlaceholder">
+                </div>
+                <div class="form-group">
+                    <label for="conditions" data-i18n="conditionsLabel">Known Medical Conditions</label>
+                    <textarea id="conditions" rows="3" placeholder-i18n="conditionsPlaceholder"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="allergies" data-i18n="allergiesLabel">Drug Allergies</label>
+                    <textarea id="allergies" rows="3" placeholder-i18n="allergiesPlaceholder"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="current-meds" data-i18n="currentMedsLabel">Current Medications</label>
+                    <textarea id="current-meds" rows="3" placeholder-i18n="currentMedsPlaceholder"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drug Query Section -->
+        <div class="section">
+            <h2 data-i18n="queryTitle">Drug Query</h2>
+            <div class="form-group">
+                <label for="drug-input" data-i18n="drugInputLabel">Drug Name or Package Insert</label>
+                <textarea id="drug-input" rows="5" placeholder-i18n="drugInputPlaceholder"></textarea>
+                <p class="form-hint" data-i18n="drugInputHint"></p>
+            </div>
+            <div class="form-group">
+                <label for="api-key" data-i18n="apiKeyLabel">OpenAI API Key</label>
+                <input type="text" id="api-key" placeholder-i18n="apiKeyPlaceholder">
+            </div>
+            <button id="query-btn" class="btn btn-primary" data-i18n="queryBtn">Start Query</button>
+        </div>
+
+        <!-- Result Section -->
+        <div class="section" id="result-section">
+            <h2 data-i18n="resultTitle">Query Result</h2>
+            <div id="loading" class="hidden" data-i18n="loadingText">Analyzing...</div>
+            <div id="error" class="hidden"></div>
+            <div id="result-display" class="hidden">
+                <div id="result-card"></div>
+                <div id="interpretation-container">
+                    <!-- Blocks will be injected by JS -->
+                </div>
+                <p id="personalized-advice"></p>
+                <p class="disclaimer" id="disclaimer"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- I18n & Language ---
+            const i18n = {
+                en: {
+                    title: "Drug Safety Checker",
+                    profileTitle: "User Profile",
+                    ageLabel: "Age",
+                    agePlaceholder: "e.g., 35",
+                    genderLabel: "Gender",
+                    genderPlaceholder: "e.g., Male, Female",
+                    conditionsLabel: "Known Medical Conditions",
+                    conditionsPlaceholder: "e.g., Hypertension, Diabetes (comma-separated)",
+                    allergiesLabel: "Drug Allergies",
+                    allergiesPlaceholder: "e.g., Penicillin (comma-separated)",
+                    currentMedsLabel: "Current Medications",
+                    currentMedsPlaceholder: "e.g., Aspirin, Metformin (comma-separated)",
+                    queryTitle: "Drug Query",
+                    drugInputLabel: "Drug Name or Package Insert",
+                    drugInputPlaceholder: "Paste the drug name (e.g., Tylenol) or text from the package insert here.",
+                    drugInputHint: "Please enter a specific drug name or brand name (e.g. Ibuprofen, Tylenol). Drug class names (e.g. NSAID, antibiotic) are not supported.",
+                    apiKeyLabel: "OpenAI API Key",
+                    apiKeyPlaceholder: "Enter your OpenAI API Key here",
+                    queryBtn: "Start Query",
+                    resultTitle: "Query Result",
+                    loadingText: "Analyzing... Please wait.",
+                    errorApiKey: "Invalid API Key. Please check and try again.",
+                    errorDrugNotFound: "FDA information for this drug was not found. Please check the name or try the English generic name.",
+                    errorNetwork: "Network request failed. Please try again later.",
+                    verdictRed: "Not Suitable For You",
+                    verdictYellow: "Use with Caution",
+                    verdictGreen: "Suitable for Use",
+                    boxedWarningTitle: "Boxed Warning",
+                    warningsAndPrecautionsTitle: "Warnings and Precautions",
+                    contraindicationsTitle: "Contraindications",
+                    interactionsTitle: "Drug Interactions",
+                    personalizedAdviceTitle: "Personalized Advice",
+                    showOriginal: "Show FDA Original Text",
+                    hideOriginal: "Hide Original Text",
+                    disclaimer: "This result is for reference only and does not constitute medical advice. Please consult a professional physician.",
+                    noBoxedWarning: "No boxed warning for this drug.",
+                    noWarningsFound: "No warnings found.",
+                    noContraindications: "No contraindications found.",
+                    noDrugInteractions: "No drug interaction information found."
+                },
+                zh: {
+                    title: "药物安全查询工具",
+                    profileTitle: "用户档案",
+                    ageLabel: "年龄",
+                    agePlaceholder: "例如: 35",
+                    genderLabel: "性别",
+                    genderPlaceholder: "例如: 男, 女",
+                    conditionsLabel: "已知疾病史",
+                    conditionsPlaceholder: "例如: 高血压, 糖尿病 (用逗号分隔)",
+                    allergiesLabel: "过敏药物",
+                    allergiesPlaceholder: "例如: 青霉素 (用逗号分隔)",
+                    currentMedsLabel: "当前正在服用的药物",
+                    currentMedsPlaceholder: "例如: 阿司匹林, 二甲双胍 (用逗号分隔)",
+                    queryTitle: "药物查询",
+                    drugInputLabel: "药品名称或说明书文字",
+                    drugInputPlaceholder: "请在此处粘贴药品名称 (例如: 泰诺) 或说明书中的文字。",
+                    drugInputHint: "请输入具体的药品名称或品牌名称（例如：Ibuprofen, Tylenol）。不支持药品类别名称（例如：NSAID, antibiotic）。",
+                    apiKeyLabel: "OpenAI API Key",
+                    apiKeyPlaceholder: "在此输入您的 OpenAI API Key",
+                    queryBtn: "开始查询",
+                    resultTitle: "查询结果",
+                    loadingText: "正在分析中，请稍候...",
+                    errorApiKey: "API Key 无效，请检查后重试。",
+                    errorDrugNotFound: "未找到该药物的FDA收录信息，请检查药名或尝试输入英文通用名。",
+                    errorNetwork: "网络请求失败，请稍后重试。",
+                    verdictRed: "不适合你",
+                    verdictYellow: "需注意",
+                    verdictGreen: "适合使用",
+                    boxedWarningTitle: "黑框警告",
+                    warningsAndPrecautionsTitle: "警告和注意事项",
+                    contraindicationsTitle: "禁忌症",
+                    interactionsTitle: "药物相互作用",
+                    personalizedAdviceTitle: "个性化建议",
+                    showOriginal: "查看FDA原文",
+                    hideOriginal: "收起原文",
+                    disclaimer: "本结果仅供参考，不构成医疗建议，请咨询专业医师。",
+                    noBoxedWarning: "该药物无黑框警告。",
+                    noWarningsFound: "无警告和注意事项信息。",
+                    noContraindications: "无禁忌症信息。",
+                    noDrugInteractions: "无相互作用信息。"
+                }
+            };
+
+            let currentLang = localStorage.getItem('drugCheckerLang') || 'en';
+
+            // --- DOM Elements ---
+            const profileToggle = document.getElementById('profile-toggle');
+            const profileContent = document.getElementById('profile-content');
+            const profileIndicator = document.getElementById('profile-indicator');
+            const queryBtn = document.getElementById('query-btn');
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
+            const resultDisplayEl = document.getElementById('result-display');
+            
+            // --- App State ---
+            let isProfileOpen = localStorage.getItem('profileOpen') !== 'false';
+            let lastAnalysisResult = null;
+            let lastFdaData = null;
+
+            const setLanguage = (lang) => {
+                currentLang = lang;
+                localStorage.setItem('drugCheckerLang', lang);
+                document.documentElement.lang = lang;
+                
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    el.textContent = i18n[lang][key] || el.textContent;
+                });
+
+                document.querySelectorAll('[placeholder-i18n]').forEach(el => {
+                    const key = el.getAttribute('placeholder-i18n');
+                    el.placeholder = i18n[lang][key] || el.placeholder;
+                });
+
+                if (lastAnalysisResult && lastFdaData) {
+                    renderResults(lastAnalysisResult, lastFdaData);
+                }
+
+                const errorType = errorEl.getAttribute('data-error-type');
+                if (errorType && !errorEl.classList.contains('hidden')) {
+                    showError(errorType);
+                }
+            };
+
+            document.getElementById('lang-toggle').addEventListener('click', () => {
+                setLanguage(currentLang === 'en' ? 'zh' : 'en');
+            });
+            
+            const updateProfileView = () => {
+                if (isProfileOpen) {
+                    profileContent.classList.remove('visually-hidden');
+                    profileIndicator.textContent = '▼';
+                } else {
+                    profileContent.classList.add('visually-hidden');
+                    profileIndicator.textContent = '▶';
+                }
+                localStorage.setItem('profileOpen', isProfileOpen);
+            };
+
+            profileToggle.addEventListener('click', () => {
+                isProfileOpen = !isProfileOpen;
+                updateProfileView();
+            });
+
+            const profileInputs = ['age', 'gender', 'conditions', 'allergies', 'current-meds', 'api-key'];
+            
+            const saveProfileData = () => {
+                const profileData = {};
+                profileInputs.forEach(id => {
+                    profileData[id] = document.getElementById(id).value;
+                });
+                localStorage.setItem('userProfile', JSON.stringify(profileData));
+            };
+
+            const loadProfileData = () => {
+                const savedProfile = localStorage.getItem('userProfile');
+                if (savedProfile) {
+                    const profileData = JSON.parse(savedProfile);
+                    profileInputs.forEach(id => {
+                        if (profileData[id]) {
+                            document.getElementById(id).value = profileData[id];
+                        }
+                    });
+                }
+            };
+
+            profileInputs.forEach(id => {
+                document.getElementById(id).addEventListener('input', saveProfileData);
+            });
+
+            queryBtn.addEventListener('click', async () => {
+                lastAnalysisResult = null;
+                lastFdaData = null;
+                resetUI();
+
+                const drugInput = document.getElementById('drug-input').value;
+                const apiKey = document.getElementById('api-key').value;
+                const userProfile = {
+                    age: document.getElementById('age').value,
+                    gender: document.getElementById('gender').value,
+                    conditions: document.getElementById('conditions').value,
+                    allergies: document.getElementById('allergies').value,
+                    currentMeds: document.getElementById('current-meds').value,
+                };
+
+                if (!drugInput.trim() || !apiKey.trim()) {
+                    showError('apiKey');
+                    return;
+                }
+
+                loadingEl.classList.remove('hidden');
+                queryBtn.disabled = true;
+
+                try {
+                    // Chinese input detection: translate to English generic name before searching
+                    let searchName = drugInput;
+                    if (/[\u4e00-\u9fa5]/.test(drugInput)) {
+                        const zhResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${apiKey}`
+                            },
+                            body: JSON.stringify({
+                                model: 'gpt-4o',
+                                messages: [
+                                    { role: "system", content: "You are a pharmacist. Convert the drug name to English generic name only. Return only the English name, nothing else." },
+                                    { role: "user", content: drugInput }
+                                ],
+                                max_tokens: 20
+                            })
+                        });
+                        const zhData = await zhResponse.json();
+                        searchName = zhData.choices[0].message.content.trim();
+                    }
+                    console.log('搜索药名:', searchName);
+
+                    // New Search Logic: Try raw input first, then fallback to GPT normalization
+                    let fdaData = await callOpenFDA(searchName);
+
+                    if (!fdaData) {
+                        console.log("Initial search with raw input failed, trying with GPT-normalized name...");
+                        const gptDrugName = await getDrugNameFromGPT(searchName, apiKey);
+                        console.log('GPT转换结果:', gptDrugName);
+                        fdaData = await callOpenFDA(gptDrugName);
+                    }
+
+                    if (!fdaData) {
+                        showError('drugNotFound');
+                        return;
+                    }
+
+                    console.log("OpenFDA Result:", fdaData); // Keep console.log as requested
+
+                    const analysisResult = await getFinalAnalysis(fdaData, userProfile, drugInput, apiKey, currentLang);
+
+                    lastAnalysisResult = analysisResult;
+                    lastFdaData = fdaData;
+                    renderResults(analysisResult, fdaData);
+
+                } catch (error) {
+                    console.error('Query failed:', error);
+                    if (error.message.includes('401')) {
+                        showError('apiKey');
+                    } else {
+                        showError('network');
+                    }
+                } finally {
+                    loadingEl.classList.add('hidden');
+                    queryBtn.disabled = false;
+                }
+            });
+
+            function resetUI() {
+                errorEl.classList.add('hidden');
+                errorEl.removeAttribute('data-error-type');
+                resultDisplayEl.classList.add('hidden');
+                document.getElementById('interpretation-container').innerHTML = '';
+            }
+            
+            async function callGPT(apiKey, messages, temperature = 0.1) {
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-4o',
+                        messages: messages,
+                        temperature: temperature,
+                        response_format: { type: "json_object" }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`GPT API request failed with status ${response.status}`);
+                }
+                const data = await response.json();
+                return JSON.parse(data.choices[0].message.content);
+            }
+
+            async function getDrugNameFromGPT(text, apiKey) {
+                const messages = [
+                    {
+                        role: 'system',
+                        content: 'You are an API that extracts the most likely English generic drug name from a given text. Your output must be a JSON object with a single key "drug_name".'
+                    },
+                    {
+                        role: 'user',
+                        content: `Extract the drug name from the following text: "${text}"`
+                    }
+                ];
+                const result = await callGPT(apiKey, messages);
+                return result.drug_name;
+            }
+
+            async function callOpenFDA(drugName) {
+                const encodedName = encodeURIComponent(`"${drugName}"`);
+                const url = `https://api.fda.gov/drug/label.json?search=openfda.generic_name:${encodedName}+OR+openfda.brand_name:${encodedName}&limit=1`;
+                
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('OpenFDA API request failed');
+                }
+                const data = await response.json();
+
+                if (data.results && data.results.length > 0) {
+                    return data.results[0];
+                }
+                return null;
+            }
+
+            async function getFinalAnalysis(fdaData, userProfile, originalInput, apiKey, lang) {
+                const langInstruction = lang === 'zh'
+                    ? 'The current language is Chinese. You MUST write all summary fields (boxed_warning_summary, warnings_summary, contraindications_hit, ddi_hit, personalized_advice) in Chinese.'
+                    : 'The current language is English. You MUST write all summary fields (boxed_warning_summary, warnings_summary, contraindications_hit, ddi_hit, personalized_advice) in English.';
+
+                const systemPrompt = `You are a drug safety assessment assistant. Based on the provided FDA drug label information and the user's profile, evaluate the safety of the drug for this user. Your primary principle is to over-warn rather than miss a potential risk. For any uncertain but potentially high-risk combination, default to red and explain the reason in the personalized advice.
+
+${langInstruction}
+
+Your judgment criteria and priority are: red > yellow > green. If any red condition is met, the result is red.
+
+### Red (Not Suitable) Conditions:
+
+**1. Standard High-Risk:**
+- If 'boxed_warning' exists and is relevant to the user's profile (age, gender, conditions).
+- If 'contraindications' matches the user's 'Known Medical Conditions' or 'Drug Allergies' (check for cross-allergy risks).
+
+**2. Specific High-Risk Drug-Drug/Drug-Disease Interactions (DDIs):**
+- **Anticoagulant Interaction:** If the user takes 'warfarin' or 'heparin' AND the queried drug is an NSAID (like 'ibuprofen', 'naproxen', high-dose 'aspirin'), a fluoroquinolone antibiotic ('ciprofloxacin', 'levofloxacin'), or 'metronidazole'.
+- **Serotonin Syndrome Risk:** If the user takes an MAO inhibitor AND the queried drug has significant serotonergic activity (like SSRIs, SNRIs, 'tramadol', 'pethidine').
+- **NSAID & Kidney Risk:** If the user has a history of 'kidney disease' or 'renal impairment' AND the queried drug is an NSAID.
+- **NSAID & Ulcer Risk:** If the user has a history of 'stomach ulcer' or 'peptic ulcer' AND the queried drug is an NSAID.
+- **Duplicate NSAID Use:** If the user is already taking an NSAID AND the queried drug is also an NSAID.
+
+### Yellow (Use with Caution) Conditions:
+- If 'warnings_and_precautions' contains risks relevant to the user's profile that are not covered by the red conditions above.
+- If 'drug_interactions' matches the user's 'Current Medications' in a way that is not covered by the high-risk red conditions above.
+
+### Green (Suitable for Use) Condition:
+- If none of the above red or yellow conditions are met.
+
+### Output Instructions:
+All outputs must include a disclaimer. You must strictly output a JSON object with no other text.
+For any FDA field where the input is "无相关信息", treat it as if there is no information for that section.
+The JSON object structure is:
+{
+  "verdict": "适合/注意/不适合",
+  "color": "green/yellow/red",
+  "boxed_warning_summary": "Summary of the boxed warning's relevance to the user, null if none or not relevant.",
+  "warnings_summary": "Summary of warnings and precautions' relevance to the user, null if none or not relevant.",
+  "contraindications_hit": "Contraindications related to the user's medical history or allergies, null if none.",
+  "ddi_hit": "Interactions related to the user's current medication, null if none. If a high-risk DDI is found, describe it here.",
+  "personalized_advice": "A paragraph of personalized advice based on the user's profile and all findings. If a high-risk scenario is triggered, explain the specific risk here and strongly advise consulting a doctor.",
+  "disclaimer": "This result is for reference only and does not constitute medical advice. Please consult a professional physician."
+}`;
+                
+                const fdaInfo = {
+                    boxed_warning: fdaData.boxed_warning?.[0] || fdaData.warnings?.[0] || "无相关信息",
+                    warnings_and_precautions: fdaData.warnings_and_precautions?.[0] || fdaData.warnings?.[0] || "无相关信息",
+                    contraindications: fdaData.contraindications?.[0] || fdaData.do_not_use?.[0] || "无相关信息",
+                    drug_interactions: fdaData.drug_interactions?.[0] || fdaData.ask_doctor_or_pharmacist?.[0] || "无相关信息",
+                };
+
+                const messages = [
+                    { role: 'system', content: systemPrompt },
+                    {
+                        role: 'user',
+                        content: 'User Profile: ' + JSON.stringify(userProfile) + '\n\nFDA Information: ' + JSON.stringify(fdaInfo) + '\n\nOriginal User Input: "' + originalInput + '"'
+                    }
+                ];
+
+                return await callGPT(apiKey, messages, 0.5);
+            }
+            
+            function renderResults(data, fdaData) {
+                resultDisplayEl.classList.remove('hidden');
+                
+                const resultCard = document.getElementById('result-card');
+                const verdictText = i18n[currentLang][`verdict${data.color.charAt(0).toUpperCase() + data.color.slice(1)}`];
+                resultCard.className = `result-${data.color}`;
+                resultCard.textContent = verdictText;
+
+                const interpretationContainer = document.getElementById('interpretation-container');
+                interpretationContainer.innerHTML = '';
+
+                const createBlock = (titleKey, summary, originalText, notFoundKey) => {
+                    const block = document.createElement('div');
+                    block.className = 'interpretation-block';
+
+                    const header = document.createElement('div');
+                    header.className = 'interpretation-header';
+                    header.textContent = i18n[currentLang][titleKey];
+                    
+                    const content = document.createElement('div');
+                    content.className = 'interpretation-content visually-hidden';
+                    
+                    if (summary) {
+                        const summaryEl = document.createElement('p');
+                        summaryEl.className = 'summary';
+                        summaryEl.textContent = summary;
+                        content.appendChild(summaryEl);
+                    }
+
+                    if (originalText) {
+                        if (summary) {
+                            content.appendChild(document.createElement('hr'));
+                        }
+                        const toggleLink = document.createElement('a');
+                        toggleLink.href = '#';
+                        toggleLink.textContent = i18n[currentLang].showOriginal;
+                        toggleLink.style.display = 'block';
+                        toggleLink.style.marginBottom = '10px';
+                        
+                        const originalTextEl = document.createElement('div');
+                        originalTextEl.className = 'original-text hidden';
+                        originalTextEl.textContent = originalText;
+
+                        toggleLink.onclick = (e) => {
+                            e.preventDefault();
+                            originalTextEl.classList.toggle('hidden');
+                            toggleLink.textContent = originalTextEl.classList.contains('hidden') ? i18n[currentLang].showOriginal : i18n[currentLang].hideOriginal;
+                        };
+                        
+                        content.appendChild(toggleLink);
+                        content.appendChild(originalTextEl);
+                    } else {
+                        const notFoundEl = document.createElement('p');
+                        notFoundEl.textContent = i18n[currentLang][notFoundKey];
+                        content.appendChild(notFoundEl);
+                    }
+
+                    header.onclick = () => content.classList.toggle('visually-hidden');
+
+                    block.appendChild(header);
+                    block.appendChild(content);
+                    interpretationContainer.appendChild(block);
+                };
+
+                createBlock('boxedWarningTitle', data.boxed_warning_summary, fdaData.boxed_warning?.[0] || fdaData.warnings?.[0], 'noBoxedWarning');
+                createBlock('warningsAndPrecautionsTitle', data.warnings_summary, fdaData.warnings_and_precautions?.[0] || fdaData.warnings?.[0], 'noWarningsFound');
+                createBlock('contraindicationsTitle', data.contraindications_hit, fdaData.contraindications?.[0] || fdaData.do_not_use?.[0], 'noContraindications');
+                createBlock('interactionsTitle', data.ddi_hit, fdaData.drug_interactions?.[0] || fdaData.ask_doctor_or_pharmacist?.[0], 'noDrugInteractions');
+
+                const adviceEl = document.getElementById('personalized-advice');
+                adviceEl.innerHTML = `<strong>${i18n[currentLang].personalizedAdviceTitle}:</strong> ${data.personalized_advice}`;
+
+                document.getElementById('disclaimer').textContent = data.disclaimer;
+            }
+
+            function showError(type) {
+                errorEl.setAttribute('data-error-type', type);
+                errorEl.classList.remove('hidden');
+                errorEl.textContent = i18n[currentLang][`error${type.charAt(0).toUpperCase() + type.slice(1)}`];
+                resultDisplayEl.classList.add('hidden');
+            }
+
+            loadProfileData();
+            updateProfileView();
+            setLanguage(currentLang);
+        });
+    </script>
+</body>
+</html>
