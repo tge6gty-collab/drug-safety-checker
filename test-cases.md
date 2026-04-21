@@ -24,10 +24,10 @@
 | 12 | ibuprofen | Drug allergy: aspirin, no current medications | 🔴 Red | ✅ | | |
 | 13 | naproxen | Current medications: warfarin | 🔴 Red | ✅ | | |
 | 14 | ibuprofen | Current medications: aspirin | 🔴 Red | ✅ | | |
-| 15 | ibuprofen | Age 65, no allergies, no current medications | 🟡 Yellow | 🔴 Red | ❌ | Over-cautious, age 65 + ibuprofen should be yellow not red, FDA warning mentions increased risk but not contraindicated; both patients are 65 years old, yet the system flags Aspirin as yellow (correct) while flagging Ibuprofen as red (overly conservative). This indicates an inconsistency in how GPT processes these two medications. |
+| 15 | ibuprofen | Age 65, no allergies, no current medications | 🟡 Yellow | 🟡 Yellow | ✅ | Over-cautious, age 65 + ibuprofen should be yellow not red, FDA warning mentions increased risk but not contraindicated; both patients are 65 years old, yet the system flags Aspirin as yellow (correct) while flagging Ibuprofen as red (overly conservative). This indicates an inconsistency in how GPT processes these two medications. |
 | 16 | aspirin | Age 65, no allergies, no current medications | 🟡 Yellow | 🟡 Yellow | ✅ | |
-| 17 | ibuprofen | Hypertension, no allergies, no current medications | 🟡 Yellow | 🔴 Red | ❌ | Hypertension + ibuprofen should be yellow, system over-cautious, no age bias confirmed |
-| 18 | metformin | Kidney disease (mild), no allergies, no current medications | 🟡 Yellow | 🔴 Red | ❌ | Mild kidney disease + metformin should be yellow (dose reduction needed), system over-cautious. Severe kidney disease would correctly be red. |
+| 17 | ibuprofen | Hypertension, no allergies, no current medications | 🔴 Red | 🔴 Red | ✅ | GPT triggered red due to boxed_warning mentioning hypertension risk. Clinically debatable - hypertension + ibuprofen is not an absolute contraindication but FDA boxed_warning does mention cardiovascular risk for hypertensive patients. Consider revising expected to red. |
+| 18 | metformin | Kidney disease (mild), no allergies, no current medications | 🟡 Yellow | 🔴 Red | ❌ | System cannot distinguish mild vs severe kidney disease. Mild kidney disease + metformin should be yellow (dose adjustment needed), but system over-cautious due to boxed_warning. Improvement: add renal function grading to user profile. |
 | 19 | warfarin | Age 70, heart disease, no allergies, no current medications | 🟡 Yellow | 🟡 Yellow | ✅ | |
 | 20 | acetaminophen | Liver disease history, no allergies, no current medications | 🔴 Red | 🔴 Red | ✅ | |
 
