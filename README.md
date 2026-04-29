@@ -2,7 +2,7 @@
 
 A personalized drug safety assessment tool powered by GPT-4o and OpenFDA.
 
-🔗 **Live Demo:** https://tge6gty-collab.github.io/drug-safety-checker/
+🔗 **Live Demo:** https://tge6gty.github.io/drug-safety-checker/
 
 ---
 
